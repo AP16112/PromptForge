@@ -1,0 +1,55 @@
+
+.chats {
+    max-width: 700px;  /*Limits the element’s width to a maximum of 700 pixels. Even if the parent container is wider, the .chats box won’t stretch beyond 700px.*/
+   
+    /* Adds a vertical scrollbar if the content inside exceeds the element’s height. Ensures users can scroll through long chat histories.
+    Only affects the vertical axis (y), so horizontal overflow isn’t impacted. */
+    /* overflow-y: auto;  ---->   Shows a scrollbar only when content overflows vertically.
+    But this overflow-y: scroll;  ---->  Always shows a scrollbar, even if content fits.*/
+    overflow-y: auto;
+    padding: 8rem;
+}
+
+
+/* Hide scrollbar track background (WebKit browsers: Chrome, Safari, Edge) */
+.chats::-webkit-scrollbar {
+  width: 8px;              /* adjust width or set to 0 to hide completely */
+}
+
+.chats::-webkit-scrollbar-track {
+  background: transparent; /* removes the grey background */
+}
+
+.chats::-webkit-scrollbar-thumb {
+  background-color: #888;  /* scrollbar thumb color */
+  border-radius: 4px;      /* rounded edges */
+}
+
+
+.userDiv {
+    display: flex;
+
+    /* Aligns the child elements horizontally to the right side of the container.
+    In a chat UI, this is often used to push the user’s own messages to the right, distinguishing them from incoming messages on the left. */
+    justify-content: flex-end;
+    font-size: 0.9rem;
+}
+
+
+.groqDiv {
+    text-align: left;
+    font-size: 0.9rem;
+}
+
+
+.userMessage {
+    background-color: #323232;
+    padding: 10px 20px;
+    border-radius: 14px;
+    margin-left: 15rem;
+    max-width: 500px;
+    width: fit-content;
+}
+
+
+

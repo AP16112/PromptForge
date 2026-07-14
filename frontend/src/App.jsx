@@ -46,6 +46,19 @@ function App() {
   // Each thread gets a UUID automatically because uuidv4() is executed once when the state is initialized. We don’t need to call setCurrThreadId unless we want to deliberately change it later.
 
 
+  // Here this 'prevChats' state variable will stores all the chats happens till now of curr thread actually in the form of array of messages i.e each chat or (sequence of prompt & reply) as one array element.
+  // So 1 chat means 1 sequence of sending prompt & getting its reponse. so together this prompt & response means 1 chat i.e 1 array element here
+  // Initially it will store empty array, which means currently no chats happens.
+  const [prevChats, setPrevChats] = useState([]);  
+
+  // Here this will store true if user just created some new chat i.e actually just created new thread, otherwise it will store false, means currently user doesn't created any new chat & it is some older chat or thread actually
+  // Initially we are storing true indicating that the new thread or new chat is just created 
+  const [newChat, setNewChat] = useState(true);
+  // SO as soon as we have done some messages, then we will make this newChat as false indicating that it is a older thread & not a just newly created thread or chat now.
+
+
+
+
 
   // This variable is meant to hold the values or state variables we want to pass into a Context Provider (like MyContext.Provider).
   // SO in this we will write those state variables and their set functions which we want to pass into a Context Provider (like MyContext.Provider).
@@ -53,7 +66,9 @@ function App() {
   const providerValues = {
     prompt, setPrompt,
     reply, setReply,
-    currThreadId, setCurrThreadId
+    currThreadId, setCurrThreadId,
+    prevChats, setPrevChats,
+    newChat, setNewChat
   };
 
 

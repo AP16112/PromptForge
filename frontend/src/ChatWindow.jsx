@@ -17,11 +17,16 @@ import { MyContext } from "./MyContext.jsx";
 // MyContext → This is a context we created in MyContext.jsx using React.createContext().
 // { MyContext } → The curly braces mean we’re importing a named export (not the default export) from that file.
 
+// So here this 'RingLoader' is also a component actually.
+import { RingLoader } from 'react-spinners';
+// But to import this RingLoader, we firstly need to install :- 
+// npm install react-spinners
+
 
 
 export default function ChatWindow() {
     // Here we are using React Context + destructuring to pull out multiple values from your MyContext provider
-    const {prompt, setPrompt, reply, setReply, currThreadId} = useContext(MyContext);
+    const {prompt, setPrompt, reply, setReply, currThreadId, setPrevChats, setNewChat} = useContext(MyContext);
     // useContext(MyContext) :- Reads the current value of MyContext.
     // Whatever we passed into <MyContext.Provider value={...}> higher up in your component tree becomes available here.
 
@@ -35,10 +40,23 @@ export default function ChatWindow() {
     // Each thread gets a UUID automatically because uuidv4() is executed once when the state is initialized. We don’t need to call setCurrThreadId unless we want to deliberately change it later.
 
 
+    // SO initiallu loading will be false, it means current it is not loading the response.
+    const [loading, setLoading] = useState(false);
+
+
+
 
     // Here it is an async function because here we will apply the post request to '/chat' route of backend using fetch fn
     // And that will get the response from Groq model which can be time consuming, so that's why we need this to be a async function
     const getReply = async () => {
+        // As as soon as this getReply fn gets called, it means that reponse is been calculated, so we need to show loader in this time
+        // So we will set this loading state variable to true now.
+        setLoading(true);
+
+        // As here we are getting the response for some user prompt in this current Thread, it means that we already created this Thread or chat & now it is not new Chat or Thread
+        setNewChat(false);
+        // As newChat == true, when we haven't created the new chat or Thread yet, i.e we haven't send 1st user prompt to get some response yet
+        // But even if we have send 1 user prompt, then it means that we created this Thread or chat, so we will make this newChat = false now.
 
         console.log("Current threadId : ", currThreadId);
         console.log("Curr message : ", prompt);
@@ -78,7 +96,67 @@ export default function ChatWindow() {
             // the error is caught here. We log it so you can debug.
             console.log(err);
         }
+
+        // So as soon as we gets the response, we will set this loading state variable to false now.
+        setLoading(false);
     }
+
+
+    // Append new chat (sequence of both prompt & reply messages) to prevChats as soon as we get the reply for this curr user prompt from the Groq model.
+    // Here we will make use of useEffect() & as soon as this reply state variable changes we will setPrevChats 
+    // This effect runs whenever 'reply' changes (see dependency array below). That means: after you get a new reply from the backend, this code executes.
+    useEffect(() => {
+        // We only proceed if both 'prompt' (user's message) and 'reply' (assistant's response) exist.
+        // This ensures we don't accidentally add incomplete chat entries.
+        if(prompt && reply) {
+            // But as here new state value depends on prev state value, so we will make use of callback in updater function
+            // React itself passes the latest state value into that curr prevChats argument. You don’t supply it — React does.
+            // So this prevChats actually the array of all the prev chats which React will supply automatically to this prevChats variable 
+            setPrevChats((prevChats) => {
+                return [ 
+                    // spread the existing chat history & then adding these two objects & then returning that new array of objects as prevChats now
+                    ...prevChats, 
+                    {
+                        role: "user",
+                        content: prompt
+                    }, 
+                    {
+                        role: "assistant",
+                        content: reply
+                    }
+                ];
+            });
+        }
+
+        //As we already added this curr prompt & its response to array of chats for this curr thread, which we will store in database as array of messages for this curr thread
+        // So now we will set the user prompt to "",  we already get the response for curr prompt, so "" means that if user wants he can send another prompt now.
+        setPrompt("");
+    }, [reply]);
+    // Here 'reply' is Dependency array: this effect runs whenever 'reply' changes
+    
+    // So we can pass some function inside useEffect like :-
+    // useEffect( function )
+    // Now whenever any changes happens in state, then this functions gets executed actually.
+    // SO this function is actually a side-effect here
+    // useEffect(function printSomething() {
+    //     console.log("This is a side-effect");
+    // });
+    // Now currently this useEffect is trigerring on every rendering, but if we want that it must triger only at some particular change, then we will use dependencies
+    // useEffect(function printSomething() {
+    //     console.log("This is a side-effect");
+    // }, [countx]);    
+    // So now this fn will only triger when this countx changes & not when county changes
+
+    // But if we want that this useEffect must trigger in both cases, then we can either remove this dependencies array or can use this :-
+    // useEffect(function printSomething() {
+    //     console.log("This is a side-effect");
+    // }, [countx, county]);
+    
+    // But if we pass empty array, then this useEffect will only gets trigger during 1st time rendering & will not trigerred during re-rendering
+    // useEffect(function printSomething() {
+    //     console.log("This is a side-effect");
+    // }, []); 
+
     
 
     return ( 
@@ -91,8 +169,13 @@ export default function ChatWindow() {
                 </div>
             </div>
 
-            {/* Here we will render this Chat component to display all the chats or threads */}
+            {/* Here we will render this Chat component to display all the chat messages till now of this current thread */}
             <Chat/>
+
+            {/* Here we are adding a ring loader which will appear while we will be waiting for response i.e when user enter some prompt & click submit button or enter, then it will take some time to get the response back from Groq model
+            SO in that meantime, we will show this loader indicating that reponse is been generated currently, so please wait for some time */}
+            <RingLoader color="#fff"  loading={loading}/>
+            {/* loading={loading} :- A boolean prop that controls whether the loader is visible. If loading is true, the spinner animates. If loading is false, the spinner is hidden. */}
 
             {/* Chat input section for taking the user input prompt*/}
             <div className="chatInput">
