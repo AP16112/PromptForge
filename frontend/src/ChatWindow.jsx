@@ -174,7 +174,7 @@ export default function ChatWindow() {
 
             {/* Here we are adding a ring loader which will appear while we will be waiting for response i.e when user enter some prompt & click submit button or enter, then it will take some time to get the response back from Groq model
             SO in that meantime, we will show this loader indicating that reponse is been generated currently, so please wait for some time */}
-            <RingLoader color="#fff"  loading={loading}/>
+            <RingLoader color="#fff"  loading={loading}  size={50} />
             {/* loading={loading} :- A boolean prop that controls whether the loader is visible. If loading is true, the spinner animates. If loading is false, the spinner is hidden. */}
 
             {/* Chat input section for taking the user input prompt*/}
