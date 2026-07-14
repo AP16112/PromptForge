@@ -1,0 +1,115 @@
+
+.chatWindow {
+    background-color: #212121;
+    height: 100vh;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    text-align: center;
+}
+
+
+/* Nabvar */
+
+.navbar {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.navbar span {
+    margin: 0.8rem 2rem;
+}
+
+
+.userIconDiv {
+    margin: 0.8rem 1rem;
+}
+
+.userIcon {
+    background-color: #339cff;
+    height: 25px;
+    width: 25px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+
+/* CHat input */
+.chatInput {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.inputBox {
+    width: 100%;
+    position: relative;
+    max-width: 700px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+
+input {
+    width: 100%;
+    border: none;
+    background-color: rgba(255, 255, 255, 0.05);
+    padding: 20px;
+    font-size: 1rem;
+    border-radius: 14px;
+
+    /* Here this box-shadow will adds multiple layered shadows to create depth. Each shadow has:
+    rgba(0,0,0,0.05) → very light black with 5% opacity
+    Different offsets (like 0 54px 55px, 0 -12px 30px, etc.) → these stack to give a soft, floating/glassy effect. 
+    box-shadow: color offset-x offset-y blur-radius spread-radius;
+    Here in this rgba(0, 0, 0, 0.05) 0 54px 55px :-
+    0 → Horizontal offset (X-axis). Means the shadow is not shifted left or right.
+    54px → Vertical offset (Y-axis). The shadow is pushed downward by 54px.
+    55px → Blur radius. Controls how soft or spread out the shadow looks. A larger value = more diffused shadow.
+    */
+    box-shadow: rgba(0, 0, 0, 0.05) 0 54px 55px,
+                rgba(0, 0, 0, 0.05) 0 -12px 30px,
+                rgba(0, 0, 0, 0.05) 0 4px 6px,
+                rgba(0, 0, 0, 0.05) 0 12px 3px,
+                rgba(0, 0, 0, 0.05) 0 -3px 5px;
+}
+
+
+input:focus {
+    outline: none;
+}
+
+
+#submit {
+    cursor: pointer;
+    height: 35px;
+    width: 35px;
+    font-size: 20px;
+    position: absolute;
+    right: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+
+#submit i:hover {
+    color: #fff;
+    font-size: 20.4px;
+}
+
+.info {
+    font-size: 0.8rem;
+    padding: 0.5rem;
+    color: #b4b4b4;
+}
