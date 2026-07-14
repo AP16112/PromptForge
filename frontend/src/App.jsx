@@ -8,7 +8,7 @@
 // Now whenever we want to write react code, we do not make any changes to index.html or main.jsx but all the changes we make in this app.jsx file because it contains the main app component.
 
 
-import { useState } from 'react'
+import { use, useState } from 'react'
 import './App.css'
 
 import Sidebar from './Sidebar.jsx';
@@ -16,13 +16,46 @@ import ChatWindow from './ChatWindow.jsx';
 
 import { MyContext } from './MyContext.jsx';
 
+// Here we are importing uuid to use it here.
+import { v4 as uuidv4 } from "uuid";
+// But to use it, we need to install uuid using :- npm install uuid 
 
 
 function App() {
+  // Here we are creating this prompt state variable to store the user input message in it actually & then with the help of useContext hook & this MyContext, we can use it in any other component also, even without passing it as props
+  const [prompt, setPrompt] = useState("");
+  // Here The state variable (initially an empty string "") & when user enter some prompt, we will store that in this.
+  
+  // Here we are creating this reply state variable to store the response for the input message & then with the help of useContext hook & this MyContext, we can use it in any other component also, even without passing it as props
+  const [reply, setReply] = useState(null);
+  // Why null? :-  Represents “no value yet” → At the start, there’s no reply from the system/API, so null is a clean placeholder.
+  // Different from empty string "" → An empty string means “there is a reply, but it’s blank.” null means “there is no reply at all yet.”
+  // null is used here to clearly signal that the reply doesn’t exist yet, rather than pretending it’s just an empty string.
+
+  // Here initially, it will set some unique uuid for this currThreadId state variable, so that as soon as some new Thread generated, it can have a unique id & it doesn't matter whether it is stored in database or not yet.
+  // SO we will use this setCurrThreadId whenever we created a new thread
+  const [currThreadId, setCurrThreadId] = useState(uuidv4());
+  // uuidv4() :- A function from the uuid library that generates a random unique identifier (UUID version 4). Example: "a3f1c9b0-7d2e-4c9a-9f2a-123456789abc"
+  // SO, every thread will get a UUID even though we don’t explicitly call setCurrThreadId inside our ChatWindow component.
+  // Because here we are initializing this currThreadId with uuid(), so that means: as soon as the provider mounts, React runs useState(uuidv4()).
+  // uuidv4() is executed immediately. A fresh unique ID is generated. That ID becomes the initial state value for currThreadId.
+  // Because React state persists across re-renders, that UUID stays the same for the lifetime of the component i.e particular thread (until you explicitly call setCurrThreadId).
+  // We don’t need to call setCurrThreadId unless we want to reset or start a new thread.
+  // The initial call to useState(uuidv4()) already guarantees that currThreadId has a valid unique ID from the very beginning.
+  // So even without calling the setter, every thread starts with a UUID automatically.
+  // Each thread gets a UUID automatically because uuidv4() is executed once when the state is initialized. We don’t need to call setCurrThreadId unless we want to deliberately change it later.
+
+
+
   // This variable is meant to hold the values or state variables we want to pass into a Context Provider (like MyContext.Provider).
   // SO in this we will write those state variables and their set functions which we want to pass into a Context Provider (like MyContext.Provider).
   // Here we are doing this because the state variable which we pass here will be used in more then 1 components, so instead of passing them as props which became complex, we will simplt create them here & then can directly use them anywhere using this MyContext actually.
-  const providerValues = {};
+  const providerValues = {
+    prompt, setPrompt,
+    reply, setReply,
+    currThreadId, setCurrThreadId
+  };
+
 
   return (
     <div className='app'>
@@ -163,3 +196,14 @@ export default App
 // So here we will create this Joker component which will print some joke & in that we will use API calls & look for how useEffect will be used in that.
 
 
+//------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+// Unique Key for List Items :-
+// In React, when you render a list of items (like with .map()), each element needs a unique key prop so React can efficiently track which items changed, were added, or need to be removed.
+
+// Why keys are needed :-
+// React uses keys to identify elements in a list between renders.
+// Without unique keys, React may reuse or mix up DOM nodes, causing bugs or incorrect UI updates.
+// Keys help React avoid re-rendering the entire list unnecessarily.
+
+// SO to give unique id's to each individual items, we will make use of npm's  UUID package. 
+// we need to install uuid using :- npm install uuid   ,  to use it.
