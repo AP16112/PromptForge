@@ -55,8 +55,8 @@ export default function ChatWindow() {
 
         // As here we are getting the response for some user prompt in this current Thread, it means that we already created this Thread or chat & now it is not new Chat or Thread
         setNewChat(false);
-        // As newChat == true, when we haven't created the new chat or Thread yet, i.e we haven't send 1st user prompt to get some response yet
-        // But even if we have send 1 user prompt, then it means that we created this Thread or chat, so we will make this newChat = false now.
+        // As newChat == true, when we have just created the new chat or Thread, but haven't  send 1st user prompt to get some response yet
+        // But even if we have send 1 user prompt, then it means that we created this Thread or chat, so now it is not remains the new chat now as we have dome some messages in it, so we will make this newChat = false now.
 
         console.log("Current threadId : ", currThreadId);
         console.log("Curr message : ", prompt);

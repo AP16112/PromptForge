@@ -69,6 +69,58 @@ export default function Sidebar() {
 
 
 
+    // Here using this fn, we are actually creating the new chat or new thread here 
+    const createNewChat = () => {
+        // Here this newChat state variable stores true if user just created some new chat i.e actually just created new thread, otherwise it will store false, means currently user doesn't created any new chat & it is some older chat or thread actually
+        // But as here we are creating new chat or thread, so we will update it with true now. 
+        setNewChat(true);   
+        setPrompt("");   // as for this new chat, currently prompt will be empty string only as we have just created this now
+        setReply(null);   // as we created this new chat, so for this currently there will be no reply object, we will store null to indicate that we haven't got any reply yet
+        setCurrThreadId(uuidv4());   // as we have just created this new chat or thread, so we need to assign a unique Thread id to this as we know that we only assign this threadId once when we created the new Thread & here we are actually creating new thread only
+        setPrevChats([]);    // here currently we are setting prevChats to be empty array of objects as we have just created this new Thread, so there will be no prev chats exists for this curr thread, so this prevChats array must be empty
+    }
+
+
+    // Here we will use this fn to switch to some already created thread oresent in history section of sidebar
+    // And then we will display all the prev chats of that thread in the output window actually
+    // Here this newThreadId is actually the id of the Thread to which we want to switch & then want to display all the chats of that thread
+    // It will be async fn as we are fetching data from database here
+    const switchThread = async (newThreadId) => {
+        // As to switch to this particular Thread having id as 'newThreadId',  we will now set the currThreadId state variable with this particular Thread id
+        // So that now our present currThreadId became this, which means that we are now on this particular thread actually.
+        setCurrThreadId(newThreadId);
+
+        try {
+            // Here we are using fetch, but if we want we cal also use axios.
+            const response = await fetch(`http://localhost:8080/api/thread/${newThreadId}`);
+            // Here we are fetching all the chats or messages which user created & gets their reply from Groq model, from this current Thread using the route which we created in backend.
+            
+            // This will returns a Response object. To read the actual JSON data, we call .json().
+            // This is asynchronous, so we use await again.
+            const res = await response.json();
+            // It will return the array of objects documents back to us in JSON format where each object either represents user message or groq reply
+            
+            console.log(res);
+
+            // Now we need to set the prevChats state variable with these previous messages or chats of this current Thread, so that it can display all those messages or chats in output window using Chat component actually
+            // As now prevchats state variable changes, so inside Chat component, all components gets gets re-rendered, so now Chat will display all the messages of this curr Thread now in output window.
+            setPrevChats(res);
+
+            // Here as this is not some new Chat or Thread, but we are just switching to some already created Thread, so we will set newChat state variable to false as true means that a new Thread is just created but it is not the case here
+            setNewChat(false);
+
+            // As we have not pass any new prompt yet in this curr Thread, so currently reply will be null only
+            setReply(null);
+        } catch(err) {
+            // If anything goes wrong (network error, invalid API key, bad request),
+            // the error is caught here. We log it so you can debug.
+            console.log(err);
+        }
+    }
+
+
+
+
     return ( 
         <section className="sidebar">
             {/* PromptForge logo */}
@@ -77,7 +129,8 @@ export default function Sidebar() {
             </div>
 
             {/* New chat button */}
-            <button>
+            {/* We want that whenever we click on this New Chat button, a new chat or Thread gets created with some unique threadId actually. And as new chat is creating, all all the previous thread history also gets updated in sidebar as here this currThreadId state variable is changing now*/}
+            <button onClick={createNewChat}>
                 <span><i className="fa-solid fa-pen-to-square"></i> New Chat</span>
             </button>
 
@@ -91,7 +144,11 @@ export default function Sidebar() {
                 idx → index of the thread (used as React key) to uniquely identify each li element for React */}
                 {
                     allThreads?.map((thread, idx) => (
-                        <li key={idx}>
+                        <li key={idx}
+                            onClick={(event) => (switchThread(thread.threadId))}      // So, When any list item is clicked, it calls the switchThread function. Passes the threadId of the clicked thread so the app can switch to that thread.
+                            className={thread.threadId === currThreadId ? "highlighted" : " "}
+                            // If the current thread’s ID matches currThreadId state variable, the item gets the "highlighted" class (to visually mark the active thread). Otherwise, it gets a blank class (" ").
+                        >
                             {thread.title}
                         </li>
                     ))
