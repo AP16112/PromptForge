@@ -43,7 +43,8 @@ export default function ChatWindow() {
     // SO initiallu loading will be false, it means current it is not loading the response.
     const [loading, setLoading] = useState(false);
 
-
+    // here we will use this state variable to check whether profile dropdown is open or not i.e it is clicked or not
+    const [isOpen, setIsOpen] = useState(false);
 
 
     // Here it is an async function because here we will apply the post request to '/chat' route of backend using fetch fn
@@ -157,17 +158,36 @@ export default function ChatWindow() {
     //     console.log("This is a side-effect");
     // }, []); 
 
+
+
+    // Here we will use this handler fn to toggle this isOpen state variable i.e if it was true earlier i.e profile dropdown is open, then by clicking on the same profile icon, here we will set it to false, it close the profile dropdown actually
+    const handleProfileClick = () => {
+        setIsOpen(!isOpen);
+    }
+
     
 
     return ( 
         <div className="chatWindow">
             <div className="navbar">
-                <span>PromptForge <i className="fa-solid fa-chevron-down"></i></span>
+                <span><img src="promptforge-logo.png"  alt="PromptForge"></img></span>
 
-                <div className="userIconDiv">
+                <div className="userIconDiv"  onClick={handleProfileClick}>
                     <span className="userIcon"><i className="fa-solid fa-user"></i></span>
                 </div>
             </div>
+
+            {/* Here we will only show this dropdown when this isOpen is true actually */}
+            {
+                isOpen && (
+                    <div className="dropDown">
+                        <div className="dropDownItem"><i class="fa-solid fa-arrow-right-to-bracket"></i> LogIn</div>
+                        <div className="dropDownItem"><i class="fa-solid fa-arrow-right-to-bracket"></i> SignUp</div>
+                        <div className="dropDownItem"><i class="fa-solid fa-arrow-right-from-bracket"></i> LogOut</div>
+                    </div>
+                )
+            }
+
 
             {/* Here we will render this Chat component to display all the chat messages till now of this current thread */}
             <Chat/>
@@ -195,7 +215,7 @@ export default function ChatWindow() {
                     <div id="submit"  onClick={getReply}><i className="fa-solid fa-paper-plane"></i></div>
                 </div>
 
-                <p className="info">PromptForge can make mistakes. Check important info. See Cookie Preferences.</p>
+                <p className="info">PromptForge uses AI model and can make mistakes. Please verify important details.</p>
             </div>
         </div>
     );
