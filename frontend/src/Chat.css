@@ -26,9 +26,16 @@
 }
 
 .chats::-webkit-scrollbar-thumb {
-  background-color: #888;  /* scrollbar thumb color */
+  background-color: rgb(212, 160, 23);  /* scrollbar thumb color */
   border-radius: 4px;      /* rounded edges */
 }
+
+
+
+.heading {
+    color: rgb(212, 160, 23);
+}
+
 
 
 .userDiv {

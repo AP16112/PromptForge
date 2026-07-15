@@ -132,7 +132,7 @@ export default function Chat() {
             {/* So if this newCHat state variable is true, it means that user created a new chat i.e new Thread actually, then we will show this line */}
             {/* If user complete any sequence of prompt & response i.e 1 chat, we will make this newChat as false because then this thread or chat will not remains the just newly created thread or chat 
             SO then this message will not get displayed & in place of this, some previous messages will be displayed on output.*/}
-            {newChat && <h1>Start a New Chat!</h1>}
+            {newChat && <h1 className="heading">Start a New Chat!</h1>}
 
             <div className="chats">
                 {/* Now we will firstly display all the previous chats including the user message of last chat also but except the lastely added chat reply, if they exists */}

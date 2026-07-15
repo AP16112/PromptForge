@@ -18,7 +18,8 @@ button {
     padding: 10px;
     border-radius: 5px;
     background-color: transparent;
-    border: solid 0.5px rgba(255, 255, 255, 0.5);
+    border: solid 0.5px rgba(212, 160, 23, 0.5);
+
     cursor: pointer;
 }
 
@@ -72,7 +73,7 @@ button:hover {
 }
 
 .history::-webkit-scrollbar-thumb {
-  background-color: #747272;  /* scrollbar thumb color */
+  background-color: rgb(212, 160, 23);  /* scrollbar thumb color */
   border-radius: 4px;      /* rounded edges */
 }
 
@@ -107,7 +108,7 @@ button:hover {
     margin: 10px;
     font-size: 15px;
     text-align: center;
-    border-top: solid 0.25px rgba(255, 255, 255, 0.5);
+    border-top: solid 0.25px rgb(212, 160, 23, 0.5);
 }
 
 
