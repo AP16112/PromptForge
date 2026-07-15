@@ -59,6 +59,15 @@ function App() {
   // Here this state variable will store all the Threads created till now.
   const [allThreads, setAllThreads] = useState([]);
 
+  // Here this state variable will store whether the user is currently logged in or not.
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  // Here this state variable will store whether the auth modal (i.e login/sigup dialog) is open or closed.
+  const [showAuthModal, setShowAuthModal] = useState(false);
+
+  // Here this state variable will store the current auth mode i.e login or signup.
+  const [authMode, setAuthMode] = useState("login");
+
 
   // This variable is meant to hold the values or state variables we want to pass into a Context Provider (like MyContext.Provider).
   // SO in this we will write those state variables and their set functions which we want to pass into a Context Provider (like MyContext.Provider).
@@ -69,7 +78,10 @@ function App() {
     currThreadId, setCurrThreadId,
     prevChats, setPrevChats,
     newChat, setNewChat,
-    allThreads, setAllThreads
+    allThreads, setAllThreads,
+    isLoggedIn, setIsLoggedIn,
+    showAuthModal, setShowAuthModal,
+    authMode, setAuthMode
   };
 
 

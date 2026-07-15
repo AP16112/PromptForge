@@ -4,6 +4,7 @@
 import "./ChatWindow.css";
 
 import Chat from "./Chat.jsx";
+import AuthModal from "./AuthModal.jsx";
 
 // useContext :-
 // A React hook for consuming context values.
@@ -26,7 +27,7 @@ import { RingLoader } from 'react-spinners';
 
 export default function ChatWindow() {
     // Here we are using React Context + destructuring to pull out multiple values from your MyContext provider
-    const {prompt, setPrompt, reply, setReply, currThreadId, setPrevChats, setNewChat} = useContext(MyContext);
+    const {prompt, setPrompt, reply, setReply, currThreadId, setPrevChats, setNewChat, isLoggedIn, setIsLoggedIn, showAuthModal, setShowAuthModal, authMode, setAuthMode} = useContext(MyContext);
     // useContext(MyContext) :- Reads the current value of MyContext.
     // Whatever we passed into <MyContext.Provider value={...}> higher up in your component tree becomes available here.
 
@@ -43,7 +44,7 @@ export default function ChatWindow() {
     // SO initiallu loading will be false, it means current it is not loading the response.
     const [loading, setLoading] = useState(false);
 
-    // here we will use this state variable to check whether profile dropdown is open or not i.e it is clicked or not
+    // Here this state variable will store whether the profile dropdown is open or not.
     const [isOpen, setIsOpen] = useState(false);
 
 
@@ -165,6 +166,20 @@ export default function ChatWindow() {
         setIsOpen(!isOpen);
     }
 
+
+    // Here this fn will open the auth modal (i.e login/signup dialog) in login or signup mode.
+    const openAuthModal = (mode) => {
+        setAuthMode(mode);
+        setShowAuthModal(true);   // as we are opening the login/signup dialog, so we will set this to true now
+        setIsOpen(false);       // as we already open the login/signup dialog, so no need of this profile dropdown now, so we will close it by setting it to false here
+    }
+
+    // Here this fn will log out the user and close the profile dropdown.
+    const handleLogout = () => {
+        setIsLoggedIn(false);    // as user is logout, so we will set isLoggedIn to false now.
+        setIsOpen(false);
+    }
+
     
 
     return ( 
@@ -181,12 +196,28 @@ export default function ChatWindow() {
             {
                 isOpen && (
                     <div className="dropDown">
-                        <div className="dropDownItem"><i class="fa-solid fa-arrow-right-to-bracket"></i> LogIn</div>
-                        <div className="dropDownItem"><i class="fa-solid fa-arrow-right-to-bracket"></i> SignUp</div>
-                        <div className="dropDownItem"><i class="fa-solid fa-arrow-right-from-bracket"></i> LogOut</div>
+                        {
+                            isLoggedIn ? (
+                                <div className="dropDownItem" onClick={handleLogout}>
+                                    <i className="fa-solid fa-arrow-right-from-bracket"></i> LogOut
+                                </div>
+                            ) : (
+                                <>
+                                    <div className="dropDownItem" onClick={() => openAuthModal("login")}>
+                                        <i className="fa-solid fa-arrow-right-to-bracket"></i> LogIn
+                                    </div>
+                                    <div className="dropDownItem" onClick={() => openAuthModal("signup")}>
+                                        <i className="fa-solid fa-arrow-right-to-bracket"></i> SignUp
+                                    </div>
+                                </>
+                            )
+                        }
                     </div>
                 )
             }
+
+            {/* Now here we will render this AuthModal component here But we have written conditions inside this component such that it will only show dialog, when user clicks either on login or signup i.e when showAuthModal is set to true & otherwise this component will return null, which means nothing will gets rendered here for this component then*/}
+            <AuthModal />
 
 
             {/* Here we will render this Chat component to display all the chat messages till now of this current thread */}

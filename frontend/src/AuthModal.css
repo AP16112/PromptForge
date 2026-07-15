@@ -1,0 +1,104 @@
+/* Auth modal styling */
+
+.authModalOverlay {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+    padding: 20px;
+}
+
+.authModal {
+    width: min(92vw, 360px);
+    background: #1f1f1f;
+    border: 1px solid rgb(212, 160, 23);
+    border-radius: 14px;
+    padding: 20px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
+}
+
+.authModalHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+    width: 100%;
+}
+
+.authModalHeader h3 {
+    margin-left: 15px;
+    color: rgb(212, 160, 23);
+    font-size: 1.1rem;
+}
+
+.authModalClose {
+    background: transparent;
+    border: none;
+    color: #fff;
+    font-size: 1.4rem;
+    line-height: 1;
+    cursor: pointer;
+    padding: 10px;
+}
+
+
+.authModeSwitch {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 14px;
+    width: 100%;
+}
+
+.authModeSwitch button {
+    flex: 1;
+    background: #323232;
+    border: 1px solid #444;
+    color: #fff;
+    padding: 8px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.authModeSwitch button.active {
+    background: rgb(212, 160, 23);
+    color: #111;
+}
+
+.authForm {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+}
+
+.authForm input {
+    display: block;
+    margin: 10px;
+    width: 88%;
+    border: 1px solid #444;
+    background: #2a2a2a;
+    color: #fff;
+    padding: 10px 12px;
+    border-radius: 8px;
+}
+
+.authSubmitBtn {
+    background: rgb(212, 160, 23);
+    color: #111;
+    border: 1px solid rgb(212, 160, 23);
+    padding: 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    width: 60%;
+    margin-left: 20%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
