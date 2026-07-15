@@ -7,7 +7,12 @@
     /* overflow-y: auto;  ---->   Shows a scrollbar only when content overflows vertically.
     But this overflow-y: scroll;  ---->  Always shows a scrollbar, even if content fits.*/
     overflow-y: scroll;
+    overflow-x: hidden;         /* hide overflowing horizontally*/
     padding: 8rem;
+
+    white-space: normal;       /* allow text to wrap naturally */
+    word-wrap: break-word;     /* legacy support for breaking long words */
+    overflow-wrap: break-word; /* modern property for breaking long words */
 }
 
 
@@ -49,6 +54,10 @@
     margin-left: 15rem;
     max-width: 500px;
     width: fit-content;
+
+    white-space: normal;       /* allow text to wrap naturally */
+    overflow-wrap: break-word; /* break long words if needed */
+    text-align: left;          /* align text to the left */
 }
 
 

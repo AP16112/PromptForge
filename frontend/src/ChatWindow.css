@@ -65,6 +65,7 @@ input {
     border: none;
     background-color: rgba(255, 255, 255, 0.05);
     padding: 20px;
+    padding-right: 50px;
     font-size: 1rem;
     border-radius: 14px;
 
@@ -100,6 +101,7 @@ input:focus {
     display: flex;
     align-items: center;
     justify-content: center;
+    margin-left: 50px;
 }
 
 

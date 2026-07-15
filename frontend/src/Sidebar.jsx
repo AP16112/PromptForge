@@ -192,7 +192,7 @@ export default function Sidebar() {
                             className={thread.threadId === currThreadId ? "highlighted" : " "}
                             // If the current thread’s ID matches currThreadId state variable, the item gets the "highlighted" class (to visually mark the active thread). Otherwise, it gets a blank class (" ").
                         >
-                            {thread.title}
+                            <div className="title">{thread.title}</div>
 
                             {/* Here we will use this delete icon to delete this current thread from history section if user clicks this icon of any thread */}
                             <i className="fa-solid fa-trash"
@@ -219,7 +219,7 @@ export default function Sidebar() {
 
             {/* Small Sign showing who the app belongs to */}
             <div className="sign">
-                <p>By Arpit Pal &hearts;</p>
+                <p>Created with ❤️ by <span>Arpit Pal</span></p>
             </div>
         </section>
     );

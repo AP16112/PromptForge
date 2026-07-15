@@ -56,6 +56,27 @@ button:hover {
     margin: 10px;
     padding: 10px;
     height: 100%;
+
+    /* Adds a vertical scrollbar if the content inside exceeds the element’s height. Ensures users can scroll through multiple li items.
+    Only affects the vertical axis (y), so horizontal overflow isn’t impacted. */
+    /* overflow-y: auto;  ---->   Shows a scrollbar only when content overflows vertically.
+    But this overflow-y: scroll;  ---->  Always shows a scrollbar, even if content fits.*/
+    overflow-y: scroll;
+    overflow-x: hidden;         /* hide overflowing horizontally*/
+}
+
+/* Hide scrollbar track background (WebKit browsers: Chrome, Safari, Edge) */
+.history::-webkit-scrollbar {
+  width: 8px;              /* adjust width or set to 0 to hide completely */
+}
+
+.history::-webkit-scrollbar-track {
+  background: transparent; /* removes the grey background */
+}
+
+.history::-webkit-scrollbar-thumb {
+  background-color: #747272;  /* scrollbar thumb color */
+  border-radius: 4px;      /* rounded edges */
 }
 
 
@@ -66,12 +87,21 @@ button:hover {
     margin-bottom: 0.3rem;
     font-size: 14px;
     border: solid 10px transparent;
-    position: relative;
+    position: relative;  
 }
 
 .history li:hover {
     background-color: rgba(180, 180, 180, 0.05);
     border-radius: 10px;
+}
+
+
+.title {
+    /* Normally, if text is too long for its container, the browser will break it into the next line. With nowrap, the text stays on a single line no matter how long it is. */
+    white-space: nowrap;      /* prevent text wrapping */
+    overflow: hidden;         /* hide overflowing text both horizontally & vertically */
+    text-overflow: ellipsis;  /* show "..." when text is too long */
+    padding-right: 13px;
 }
 
 
@@ -84,10 +114,16 @@ button:hover {
 }
 
 
+.sign span {
+    color: yellow;
+}
+
+
 .fa-trash {
     opacity: 0;
     position: absolute;
     right: 0;
+    top: 25%;
 }
 
 
