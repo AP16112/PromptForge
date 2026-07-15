@@ -56,8 +56,8 @@ function App() {
   const [newChat, setNewChat] = useState(true);
   // SO as soon as we have done some messages, then we will make this newChat as false indicating that it is a older thread & not a just newly created thread or chat now.
 
-
-
+  // Here this state variable will store all the Threads created till now.
+  const [allThreads, setAllThreads] = useState([]);
 
 
   // This variable is meant to hold the values or state variables we want to pass into a Context Provider (like MyContext.Provider).
@@ -68,7 +68,8 @@ function App() {
     reply, setReply,
     currThreadId, setCurrThreadId,
     prevChats, setPrevChats,
-    newChat, setNewChat
+    newChat, setNewChat,
+    allThreads, setAllThreads
   };
 
 
