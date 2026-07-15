@@ -51,7 +51,80 @@ export default function Chat() {
     // useContext(MyContext) :- Reads the current value of MyContext.
     // Whatever we passed into <MyContext.Provider value={...}> higher up in your component tree becomes available here.
 
+    // Here we will use this latestReply state variable to check whether user currently done any new chat or not & if yes, then this latestReply will store the reply of this curr chat, otherwise it will store null indicating that user haven't done any new chat in this already created thread. 
     const [latestReply, setLatestReply] = useState(null);
+
+
+    // SO inside this useEffect() fn, we will firstly separate the latest reply & if that exists then it means that user have created new message in curr thread, so we will create type effect for thay lastest reply in this fn actually.
+    // This effect runs whenever either 'prevChats' or 'reply' changes (because they are listed in the dependency array below).
+    useEffect(() => {
+        if(reply === null){
+            // Case 1: No reply yet.
+            // That means the user hasn't created any new messages in this current thread. So we simply reset 'latestReply' to null (no typing effect, nothing to show).
+            // So it means that user haven't created any new messages in this curr thread, so we will only show all the prevChats normally without any typing effect
+            setLatestReply(null);  
+            return;  // Exit early, nothing else to do.
+        }
+
+        
+        // ?. (optional chaining) :- Ensures that if prevChats is null or undefined, the code won’t throw an error. Instead, prevChats?.length will safely evaluate to undefined.
+        // This condition is checking:
+        // True → when there are no previous chats (empty array) OR prevChats is not defined.
+        // False → when there is at least one chat in the history.
+        if(!prevChats?.length) {
+            // Case 2: If there are no previous chats (empty array or undefined), then we don't run the typing effect either as there is nothing to show.
+            return;
+        }
+
+        // Case 3: We have a reply and existing chats.
+        // Split this latest reply string into individual words.
+        const content = reply.split(" ")  // individual words
+
+        let idx = 0;    // Start index for words.
+
+        //Creating an interval that runs every 40ms using this built-in Javascript function.
+        const interval = setInterval(() => {
+            // At each tick, update 'latestReply' with words up to the current index.
+            // This simulates a typing effect by gradually revealing the reply word by word.
+            setLatestReply(content.slice(0, idx+1).join(" "));
+
+            idx++;   // Move to the next word.
+
+            // Once we've displayed all words, stop the interval.
+            if(idx >= content.length){
+                clearInterval(interval);
+            }
+        }, 40);   // 40ms interval
+
+        // Cleanup function: if the component re-renders or unmounts, clear the interval to avoid memory leaks or multiple overlapping timers.
+        // Without cleanup, every time reply or prevChats changes, a new setInterval would be created.
+        // That would cause multiple overlapping timers, leading to bugs (like the typing effect running too fast or duplicating).
+        // Cleanup ensures only one active interval at a time, and prevents memory leaks.
+        return (() => clearInterval(interval));
+    }, [prevChats, reply]);
+    
+    // So we can pass some function inside useEffect like :-
+    // useEffect( function )
+    // Now whenever any changes happens in state, then this functions gets executed actually.
+    // SO this function is actually a side-effect here
+    // useEffect(function printSomething() {
+    //     console.log("This is a side-effect");
+    // });
+    // Now currently this useEffect is trigerring on every rendering, but if we want that it must triger only at some particular change, then we will use dependencies
+    // useEffect(function printSomething() {
+    //     console.log("This is a side-effect");
+    // }, [countx]);    
+    // So now this fn will only triger when this countx changes & not when county changes
+
+    // But if we want that this useEffect must trigger in both cases, then we can either remove this dependencies array or can use this :-
+    // useEffect(function printSomething() {
+    //     console.log("This is a side-effect");
+    // }, [countx, county]);
+    
+    // But if we pass empty array, then this useEffect will only gets trigger during 1st time rendering & will not trigerred during re-rendering
+    // useEffect(function printSomething() {
+    //     console.log("This is a side-effect");
+    // }, []); 
 
 
     return ( 
@@ -62,21 +135,23 @@ export default function Chat() {
             {newChat && <h1>Start a New Chat!</h1>}
 
             <div className="chats">
-                {/* Now we will firstly display all the previous chats except this lastely added chat here if they exists */}
+                {/* Now we will firstly display all the previous chats including the user message of last chat also but except the lastely added chat reply, if they exists */}
                 {/* If user currently also perform prompt + response sequence, then that curr chat will get added as the last chat in this curr thread actually */}
                 {/* So then we will show the reply of that that with typing effect but if in this curr thread, user currently do not add any new prompt + response sequence, then we will simply show the reply of last chat without any typing effect */}
-                {/* so that's why we need to check whether the lastely added chat is curr chat or not, so that's why we will shpw that separately & that's why we are only showing all the prev chats here except the lastely added chat */}
+                {/* so that's why we need to check whether the lastely added chat is curr chat or not, so that's why we will shpw that chat reply separately but not its user message & that's why we are only showing all the prev chats including the lastely added chat user message also except the lastely added chat reply */}
                 {/* prevChats is an array of chat objects (user + assistant messages).
                 The ?. is optional chaining → prevents errors if prevChats is null or undefined. 
                 The ?. ensures that if prevChats is null or undefined, the code won’t throw an error. Instead, it will short‑circuit and return undefined, so .map(...) won’t run.
                 This is safer if there’s any chance that prevChats hasn’t been initialized yet.
                 Because Without Optional Chaining like prevChats.slice(0, -1).map(...) :- Assumes prevChats is always defined (e.g., initialized as an empty array [] in state).
                 If prevChats is null or undefined, this will throw a runtime error: “Cannot read properties of undefined (reading 'slice')”.*/}
-                {/* .slice(0, -1) → takes all elements of the array except the last one. Example: [a, b, c].slice(0, -1) → [a, b].*/}
+                {/* .slice(0, -1) → takes all elements of the array except the last one i.e the reply of lastly added chat actually. Example: [a, b, c].slice(0, -1) → [a, b].
+                Because prevChats is an array of object in which one object have two things i.e role & content & last element or object will that object in which role is "assistant* & content will be reply of lastely added chat
+                So last element doesn't means the complete sequence of user chat & groq model chat but it only means groq model chat actually/}
                 {/* .map((chat, idx) => (...)) --> Loops through each chat object in the sliced array.
                 chat → the current chat object. And idx → the index of that chat in the array (used as a React key). */}
                 {
-                    prevChats?.map((chat, idx) => (
+                    prevChats?.slice(0, -1).map((chat, idx) => (
                         <div className={chat.role === "user" ? "userDiv" : "groqDiv"}  key={idx}>
                             {
                                 chat.role == "user" ? <p className="userMessage">{chat.content}</p> :
@@ -89,28 +164,32 @@ export default function Chat() {
                 }
 
 
-                {/* Now we will display this lastely added chat (which can be the curr chat also) */}
-                {/* If user currently also perform prompt + response sequence, then that curr chat will get added as the last chat in this curr thread actually */}
-                {/* So then we will show the reply of that that with typing effect but if in this curr thread, user currently do not add any new prompt + response sequence, then we will simply show the reply of last chat without any typing effect */}
-                {/* so that's why we need to check whether the lastely added chat is curr chat or not, so that's why we will shpw that separately & that's why we are only showing all the prev chats here except the lastely added chat */}
+                {/* Now we will display this lastely added chat reply (which can be the curr chat reply also) */}
+                {/* If user currently also perform prompt + response sequence, then that curr chat user message will get added as 2nd last element & curr chat groq reply will get added as the last chat or last element in this curr thread array of messages actually */}
+                {/* So then we will show the reply of that with typing effect but if in this curr thread, user currently do not add any new prompt + response sequence, then we will simply show the reply of last chat without any typing effect */}
+                {/* so that's why we need to check whether the lastely added chat is curr chat or not, so that's why we will shpw that chat reply separately*/}
                 {/* Here we are checking whether user have done any chat or not using prevChats.length > 0, because if not, then nothing to show, so we will not do anything then */}
-                {/* {
+                {
                     prevChats.length > 0 && (
                         <> 
                             {
+                                // if latestReply is null, then it means that user haven't created new messages in this curr thread, so we will simply show the last chat reply without any typing effect
                                 latestReply === null ? (
+                                    // Here we need to pass this key as we have created many div elements with the same class name actually, so if we want that react will not get confuse between these elements, then we need to pass a key here
                                     <div className="groqDiv"  key={"non-typing"}>
-                                        <></>
+                                        <ReactMarkdown rehypePlugins={[rehypeHighlight]}>{prevChats[prevChats.length - 1].content}</ReactMarkdown>
+                                        {/* <ReactMarkdown> :- A React component from the react-markdown library. It takes a string of Markdown text and renders it as proper HTML inside your React app. Example: if chat.content = "**Hello**", it will render <strong>Hello</strong>. */}
+                                        {/* rehypePlugins={[rehypeHighlight]} :- This attaches the rehype-highlight plugin to ReactMarkdown. It automatically detects code blocks in the Markdown (like js ...) and applies syntax highlighting. That means our code snippets will be color‑styled for readability. */}
                                     </div>
                                 ) : (
                                     <div className="groqDiv"  key={"typing"}>
-                                        <></>
+                                        <ReactMarkdown rehypePlugins={[rehypeHighlight]}>{latestReply}</ReactMarkdown>
                                     </div>
                                 )
                             }
                         </>
                     )
-                } */}
+                }
             </div>
         </>
     );

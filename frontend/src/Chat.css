@@ -6,7 +6,7 @@
     Only affects the vertical axis (y), so horizontal overflow isn’t impacted. */
     /* overflow-y: auto;  ---->   Shows a scrollbar only when content overflows vertically.
     But this overflow-y: scroll;  ---->  Always shows a scrollbar, even if content fits.*/
-    overflow-y: auto;
+    overflow-y: scroll;
     padding: 8rem;
 }
 
@@ -52,4 +52,22 @@
 }
 
 
+/* Targeting code blocks highlighted by highlight.js.
+   .hljs is the default class applied to code blocks when syntax highlighting is enabled. 
+*/
+.hljs {
+    border-radius: 14px !important;  
+    /* Adds rounded corners to the highlighted code block. The value '14px' means the corners will be smoothly curved. The '!important' ensures this style overrides any other border-radius rules that might come from highlight.js or other CSS files. */
+}
 
+
+/* Targeting <pre> elements (used for preformatted text, like code blocks).
+   By default, <pre> preserves whitespace and line breaks exactly as written.
+*/
+pre {
+    white-space: pre-wrap;  
+    /* Changes the default behavior:
+       - 'pre-wrap' still preserves whitespace and line breaks, but also allows text to wrap onto the next line if it’s too long.
+       - This prevents horizontal scrolling and makes code blocks fit better inside narrow containers (like chat bubbles or mobile screens). 
+    */
+}
