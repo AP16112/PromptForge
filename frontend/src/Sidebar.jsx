@@ -92,6 +92,7 @@ export default function Sidebar() {
 
         try {
             // Here we are using fetch, but if we want we cal also use axios.
+            // As here we are not passing any options like method: "GET" or "POST", so it will consider the default method i.e "GET method actually"
             const response = await fetch(`http://localhost:8080/api/thread/${newThreadId}`);
             // Here we are fetching all the chats or messages which user created & gets their reply from Groq model, from this current Thread using the route which we created in backend.
             
@@ -111,6 +112,48 @@ export default function Sidebar() {
 
             // As we have not pass any new prompt yet in this curr Thread, so currently reply will be null only
             setReply(null);
+        } catch(err) {
+            // If anything goes wrong (network error, invalid API key, bad request),
+            // the error is caught here. We log it so you can debug.
+            console.log(err);
+        }
+    }
+
+
+
+    // This fn will delete this thread from the database & then also remove it from the history section of the sidebar also.
+    // Here this threadId is actually the id of the Thread which we want to delete 
+    // It will be async fn as we are deleting this curr thread from database here
+    const deleteThread = async (threadId) => {
+        try {
+            // Here we are using fetch, but if we want we cal also use axios.
+            // As here if we don't pass any options like method: "GET" or "POST", so it will consider the default method i.e "GET method actually"
+            // But for "DELETE" method we need to pass that as object form here 
+            const response = await fetch(`http://localhost:8080/api/thread/${threadId}`, {method: "DELETE"});
+            // It will delete this thread from the database and then return that deleted thread all messages i.e array of message objects actually as response
+            
+            // This will returns a Response object. To read the actual JSON data, we call .json().
+            // This is asynchronous, so we use await again.
+            const res = await response.json();
+            // It will return the array of objects documents back to us in JSON format where each object either represents user message or groq reply
+            
+            console.log(res);
+
+            // Updated threads gets re-render
+            // Update React state: remove the deleted thread from allThreads.
+            // prev.filter(...) creates a new array excluding the deleted thread.
+            setAllThreads(prev => prev.filter(thread => thread.threadId !== threadId));
+            // Here prev represents all the thread which are shown in history section, so we are applying filter fn on those array of Thread objects
+            // So we are finding all those thread objects whose id is not equal to this deleted thread, so filter fn will return all those thread objects array & then we will set the allThreads state variables with that
+            // So as now state variable gets changes, so re-rendering happens & during re-rendering, now in history section, all these updated threads will be shown only
+
+
+            // If the deleted thread was the currently active one, reset by creating a new empty chat.
+            // Now if this curr thread which we are deleting is currently active i.e its chats or messages are displaying on output window, so we need to remove those also now
+            // And for that, simpliest way is to show new chat or thread window now
+            if(threadId === currThreadId){
+                createNewChat();
+            }
         } catch(err) {
             // If anything goes wrong (network error, invalid API key, bad request),
             // the error is caught here. We log it so you can debug.
@@ -150,8 +193,27 @@ export default function Sidebar() {
                             // If the current thread’s ID matches currThreadId state variable, the item gets the "highlighted" class (to visually mark the active thread). Otherwise, it gets a blank class (" ").
                         >
                             {thread.title}
+
+                            {/* Here we will use this delete icon to delete this current thread from history section if user clicks this icon of any thread */}
+                            <i className="fa-solid fa-trash"
+                                onClick={(event) => {
+                                    // As here we are using multiple statements, so that's we are using  => {} this & not this => () as it is used for single statement case.
+                                    
+                                    // Here this will Prevents the click event from bubbling up to parent elements.
+                                    // Without this, clicking the trash icon could also trigger the parent <li>’s onClick (like changing the thread), which is not desired when deleting.
+                                    event.stopPropagation();    // stop event bubbling
+                                    deleteThread(thread.threadId);   // Calls this function to delete the thread with the given threadId. This is the actual action tied to the trash icon.
+                                }}
+                            ></i>
                         </li>
                     ))
+                    // What is event.stopPropagation()? :-
+                    // In JavaScript (and React), events bubble up the DOM tree by default. That means if you click on a child element, the event also travels up to its parent, grandparent, and so on — triggering any parent event listeners.
+                    // event.stopPropagation() is a method that stops this bubbling process. So the event is handled only by the element you clicked, and it won’t trigger handlers on parent elements.
+                    // Imagine you have: A list item (<li>) that changes the current thread when clicked. & A trash icon (<i>) inside that <li> to delete the thread.
+                    // If you click the trash icon:
+                    // Without stopPropagation() → the click bubbles up, so both deleteThread and changeThread run. That means you delete the thread and switch to it (unwanted behavior).
+                    // With stopPropagation() → only deleteThread runs. The parent <li>’s click handler is ignored.
                 }
             </ul>
 
