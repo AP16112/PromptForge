@@ -45,19 +45,34 @@ const app = express();
 const cors = require("cors");
 
 
+// this express-session is actually a middleware, so we will make use of app.use() here
+const session = require("express-session");
+const passport = require("passport");
+const LocalStrategy = require("passport-local");
+// Here this local strategy we are going to follow actually.
+
+const MongoStore = require("connect-mongo");
+
+
 // Here we are defining the port number on which our backend server will run. We are using the environment variable PORT if it is defined, otherwise we are using the default port number 8080. This allows us to easily change the port number in different environments (e.g., development, production) without having to modify the code. It also allows us to avoid conflicts with other applications that may be using the same port number.
 const port = process.env.PORT || 8080;
 
 // Now we will reuire 'router' object from the 'chat.js' file from the routes folder here, so that we can use that router object here directly 
 const chatRoutes = require("./routes/chat.js");
+const authRoutes = require("./routes/auth.js");
 // Now here this 'chatRoutes' actually representing the router object having all the routes like router.get() or router.post() or etc.
 
 const mongoose = require("mongoose");
 // mongoose is a library that creates a connection between MongoDB & Node.js JavaScript Runtime Environment.
 
+const User = require("./models/user.js");
+
 
 // SO now we will use the app.use() method to add middleware to our Express application. Middleware functions are functions that have access to the request object (req), the response object (res), and the next middleware function in the application’s request-response cycle. They can execute any code, make changes to the request and response objects, end the request-response cycle, and call the next middleware function in the stack. In this case, we are using two middleware functions: cors() and bodyParser.json(). The cors() middleware enables Cross-Origin Resource Sharing (CORS) for all routes, allowing our frontend application to make requests to our backend server from a different domain or port. The bodyParser.json() middleware parses incoming request bodies in JSON format and makes them available under the req.body property, allowing us to easily access and process data sent from the client side.
-app.use(cors()); // Enable CORS for all routes
+app.use(cors({
+    origin: process.env.CLIENT_URL || "http://localhost:5173",
+    credentials: true   // For cookie/session auth, this must allow credentials
+}));// Enable CORS for all routes
 // CORS (Cross-Origin Resource Sharing) is a security feature built into browsers. By default, browsers block requests from one origin (say, http://localhost:3000) to another (http://localhost:8080).
 // cors() is a middleware that tells Express: “It’s okay to accept requests from other origins.”
 // With app.use(cors());, you’re enabling CORS for all routes in your server.
@@ -70,6 +85,86 @@ app.use(cors()); // Enable CORS for all routes
 app.use(express.json()); // for JSON data
 //SO it means if for any post request, json data comes, then express will parse it to understand it
 
+
+const store = MongoStore.create({
+    mongoUrl: process.env.ATLASDB_URL,   // so now all our session info gets stored in MongoDb Altas store.
+    // Here we are passing the secret in this MongoStore.create() method also because we are using this store to store our session data in the database, so we need to pass the secret here also to make the session cookie as signed cookie.
+    
+    //Here by this touchAfter option, we are setting the time period after which the session data will get updated in the database, so that it will not update the session data in the database for every request, it will only update the session data in the database after this time period, so that it will reduce the number of writes to the database and improve the performance of our application.
+    // Normally, every time a user makes a request, the session store updates the session document in MongoDB.
+    // This can cause a lot of writes to your database, even if the session data hasn’t changed.
+    // touchAfter sets a minimum time interval (in seconds) before the session is “touched” (updated) again.
+    // If the session hasn’t changed, but the user keeps making requests, MongoDB won’t be updated until that interval passes.
+    touchAfter: 24 * 60 * 60 // time period in seconds
+    // Here, the session will only be updated in MongoDB once per day if the session data hasn’t changed.
+    // If you modify the session (e.g., add/remove data), it will still be saved immediately.
+    // This reduces unnecessary writes and improves performance.
+});
+// So here we are creating a new MongoDB store for our sessions using connect-mongo. This will allow us to store session data in our MongoDB database instead of in memory, which is more scalable and suitable for production environments. We pass the mongoUrl option with our database URL to connect to the correct MongoDB instance.
+
+
+
+const sessionOptions = {
+    // store: store,   // here we are passing the store that we created above to store our session data in the database, so that it will be more secure and scalable than storing the session data in memory.
+    store,     // here we are passing the store that we created above to store our session data in the database, so that it will be more secure and scalable than storing the session data in memory.
+    secret: process.env.SECRET,
+    resave: false,
+    saveUninitialized: false,
+    //cookie → This object defines settings for the session cookie that gets sent to the browser.
+    // expires → Sets the exact date/time when the cookie should expire.
+    // Date.now() → Returns the current timestamp in milliseconds. 7 * 24 * 60 * 60 * 1000 → Number of milliseconds in 7 days:
+    cookie: {
+        expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+        maxAge: 7 * 24 * 60 * 60 * 1000,
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+    },
+}
+// This is the secret used to sign the session ID cookie.
+// The secret itself should be not easily parsed by a human and would best be a random set of characters. A best practice may include:
+// The use of environment variables to store the secret, ensuring the secret itself does not exist in your repository.
+// Periodic updates of the secret, while ensuring the previous secret is in the array.
+
+// But for easiness we are taking a simple string as secret here.
+// so the cookie which we are sending to browser which containing sessionId is actually a signed cookie.
+// so we need to make use of sceret to make this as signed cookie i.e to add signature to this cookie. 
+
+// So now as we use our session as middleware & also added a secret in it, so now with any request i.e app.get() or post() or etc,  a sessionId will get stored inside our browser in the form of a cookie.
+
+// resave :- Forces the session to be saved back to the session store, even if the session was never modified during the request.
+
+
+
+app.use(session(sessionOptions));
+
+
+// We need the session to make use of passport because within one session, user credentials remains the same
+// So we need to use this passport below this app.use(session(sessionOptions)) only.
+
+app.use(passport.initialize());
+// This sets up Passport so it can intercept requests and look for authentication data. Without it, Passport’s strategies (like local login) won’t run.
+app.use(passport.session());
+// So we use this so that each request must know of what session they are actually a part of.
+// This hooks Passport into Express’s session middleware. It ensures that once a user is authenticated, their session ID is stored in a cookie. On subsequent requests, Passport can deserialize the user from the session and attach the user object to req.user.
+
+
+// use passport-local-mongoose helpers for local strategy/session support
+passport.use(new LocalStrategy({ usernameField: 'email' }, User.authenticate()));
+passport.serializeUser(User.serializeUser());
+passport.deserializeUser(User.deserializeUser());
+
+// passport.serializeUser(User.serializeUser());
+// Purpose: Defines how user data is stored in the session. When a user logs in successfully, Passport needs to "serialize" the user — i.e., decide what piece of information should be saved in the session cookie.
+// By default, passport-local-mongoose provides a helper method User.serializeUser() that tells Passport to store the user’s unique identifier (usually _id) in the session.
+// This keeps the session lightweight — instead of storing the whole user object, only the ID is stored.
+// e.g User logs in with username + password. Passport verifies credentials.
+// serializeUser runs → stores user._id in the session cookie. The browser now carries this session ID with each request.
+
+// passport.deserializeUser(User.deserializeUser());
+// Purpose: Defines how to retrieve full user details from the session. When a request comes in, Passport looks at the session cookie, finds the stored user ID, and then "deserializes" it — i.e., fetches the full user object from the database.
+// User.deserializeUser() is a helper from passport-local-mongoose that knows how to look up the user by ID and attach it to req.user.
+// e.g Browser sends a request with the session cookie. Passport extracts the stored user._id.
+// deserializeUser runs → queries MongoDB for that user. The complete user object is attached to req.user, so you can access it in your routes.
 
 
 
@@ -219,9 +314,10 @@ app.use("/api", chatRoutes);
 // Organized routes: All routes inside the listings router will automatically be prefixed with /api.
 // Avoids repetition: You don’t have to write /api in every route definition inside the router file.
 // Clear structure: Makes it obvious that these routes belong to the “ChatRoutes” resource.
-
 // here this '/api' is parent route & all the route that will be present after this in chat.js  router.get() or router.post() will be child route.
 
+app.use("/api/auth", authRoutes);
+// Organized routes: Auth routes are available under /api/auth, and chat routes remain under /api.
 
 
 

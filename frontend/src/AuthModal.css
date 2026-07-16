@@ -88,6 +88,33 @@
     border-radius: 8px;
 }
 
+.passwordField {
+    position: relative;
+    width: 88%;
+}
+
+.passwordField input {
+    display: block;
+    margin: 10px;
+    width: 100%;
+    border: 1px solid #444;
+    background: #2a2a2a;
+    color: #fff;
+    padding: 10px 12px;
+    border-radius: 8px;
+}
+
+.passwordToggle {
+    position: absolute;
+    top: 5%;
+    left: 285px;
+    background: transparent;
+    border: none;
+    color: #d4a017;
+    cursor: pointer;
+    font-weight: 600;
+}
+
 .authSubmitBtn {
     background: rgb(212, 160, 23);
     color: #111;
@@ -101,4 +128,37 @@
     display: flex;
     align-items: center;
     justify-content: center;
+}
+
+.authFeedback {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 10px;
+    width: 100%;
+    padding: 0 10px;
+}
+
+.authSuccess {
+    margin: 0;
+    color: #8de28d;
+    font-size: 0.95rem;
+    text-align: center;
+    padding: 12px 10px;
+    background: rgba(141, 226, 141, 0.1);
+    border: 1px solid #8de28d;
+    border-radius: 6px;
+    font-weight: 500;
+}
+
+.authError {
+    margin: 0;
+    color: #ff6b6b;
+    font-size: 0.95rem;
+    text-align: center;
+    padding: 12px 10px;
+    background: rgba(255, 107, 107, 0.1);
+    border: 1px solid #ff6b6b;
+    border-radius: 6px;
+    font-weight: 500;
 }

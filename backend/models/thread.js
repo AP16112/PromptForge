@@ -35,6 +35,11 @@ const messageSchema = new Schema({
 
 // Define the threadSchema
 const threadSchema = new Schema({
+    userId: {
+        type: Schema.Types.ObjectId,
+        ref: 'User',
+        required: true,
+    },
     threadId: {    // A unique identifier for the thread (conversation).
         type: String,
         required: true,

@@ -13,6 +13,12 @@ const router = express.Router();  //Creates a new router instance.
 const Thread = require("../models/thread.js"); 
 // As we know that for this Model, by-default mongoose will create a collection called as 'threads' for this model
 
+const requireAuth = (req, res, next) => {
+    if (req.isAuthenticated && req.isAuthenticated()) {
+        return next();
+    }
+    return res.status(401).json({ error: "Authentication required." });
+};
 
 const getGroqAPIResponse = require("../utils/openai.js");
 
@@ -55,19 +61,18 @@ router.post("/test", async (req, res) => {
 // Now we will define all of our required routes for this project :-
 
 // Get all threads Route :-
-// GET  ---->  "/thread"  route  :- to get all the threads from the database in the sorted order of updatedAt time.
+// GET  ---->  "/thread"  route  :- to get all the threads from the database for the current logged in user.
 // So the latest updated or lastest created thread i.e most recent chat will be at top & vice-versa
-router.get("/thread", async (req, res) => {
+router.get("/thread", requireAuth, async (req, res) => {
     try {
         // It will Finds all documents in the "threads" collection & return that as the array of documents
         // {} → empty filter, so it returns everything
         // .sort({ updatedAt: -1 }) → sorts results by updatedAt in descending order.
         // -1 means descending (most recent first).
         // +1 would mean ascending (oldest first).
-        const threads = await Thread.find({}).sort({updatedAt: -1});
         // descending order of updatedAt... most recent data on top
-    
         // Sends the array of thread documents back to the client in JSON format. so, The frontend can then render them in the chat history component.
+        const threads = await Thread.find({ userId: req.user._id }).sort({ updatedAt: -1 });
         res.json(threads);
     } catch(error) {
         console.log(error);
@@ -80,7 +85,7 @@ router.get("/thread", async (req, res) => {
         // {
         //     "error": "Failed to fetch threads"
         // }
-        res.status(500).json({error: "Failed to fetch threads"});
+        res.status(500).json({ error: "Failed to fetch threads" });
     }
 });
 
@@ -89,23 +94,20 @@ router.get("/thread", async (req, res) => {
 
 // Get all the messages of a particular thread Route :-
 // GET  ---->  "/thread/:threadId"  route  :- to get all the messages of a particular thread from the database
-router.get("/thread/:threadId", async (req, res) => {
-    const {threadId} = req.params;      // Extract threadId from the URL parameters
+router.get("/thread/:threadId", requireAuth, async (req, res) => {
+    const {threadId} = req.params;
 
     try {
-        // Find a single thread document in MongoDB that matches the given threadId
-        const thread = await Thread.findOne({threadId});
+        const thread = await Thread.findOne({ threadId, userId: req.user._id });
 
         if(!thread) {
-            res.status(404).json({error: "Thread not found"});
+            return res.status(404).json({ error: "Thread not found" });
         }
-    
-        // If thread exists, return its messages array as JSON
+
         res.json(thread.messages);
     } catch(error) {
         console.log(error);
-
-        res.status(500).json({error: "Failed to fetch this chat messages"});
+        res.status(500).json({ error: "Failed to fetch this chat messages" });
     }
 });
 
@@ -115,22 +117,20 @@ router.get("/thread/:threadId", async (req, res) => {
 
 // Delete a particular thread Route :-
 // DELETE  ---->  "/thread/:threadId"  route  :- to delete a particular thread from the database
-router.delete("/thread/:threadId", async (req, res) => {
-    const {threadId} = req.params;      // Extract threadId from the URL parameters
+router.delete("/thread/:threadId", requireAuth, async (req, res) => {
+    const {threadId} = req.params;
 
     try {
-        // Find a single thread document in MongoDB that matches the given threadId & then delete that thread & it will also return that deleted thread actually
-        const deletedThread = await Thread.findOneAndDelete({threadId});
+        const deletedThread = await Thread.findOneAndDelete({ threadId, userId: req.user._id });
 
         if(!deletedThread) {
-            res.status(404).json({error: "Thread not found"});
+            return res.status(404).json({ error: "Thread not found" });
         }
-    
-        res.status(200).json({success: "Thread deleted successfully"});
+
+        res.status(200).json({ success: "Thread deleted successfully" });
     } catch(error) {
         console.log(error);
-
-        res.status(500).json({error: "Failed to delete thread"});
+        res.status(500).json({ error: "Failed to delete thread" });
     }
 });
 
@@ -141,7 +141,7 @@ router.delete("/thread/:threadId", async (req, res) => {
 // Main chat Route to send the prompt (message) in order to get the response :-
 // POST  ---->  "/chat"  route  :- Main POST Route to send & save the prompt (message) + response in database & then also return the response as output which we get from the Groq API endpoints 
 // SO when we want to send a new message or prompt in order to get the result or response, we make use of this route actually
-router.post("/chat", async (req, res) => {
+router.post("/chat", requireAuth, async (req, res) => {
     // As this is post request, user inputs will not be there as request parameter but it will be present inside the body of the request
     // Extracting threadId and message from the request body 
     const {threadId, message} = req.body;    
@@ -154,15 +154,15 @@ router.post("/chat", async (req, res) => {
     // Also if there is no thread id, then also we can't send response as we don't know which thread we are taking about.
     // so we need both these details as input from the user.
     if(!threadId || !message){
-        res.status(400).json({error: "missing required fields"});
+        return res.status(400).json({error: "missing required fields"});
     }
 
     // Now if both these details exists, then two cases possible :-
     // 1. we already have the chat or thread in database & in that only, we are continuing the new message
     // 2. we are starting the new chat or we don't have this thread in database yet & we need to create it now.
     try {
-        // Try to find an existing thread in the database with this threadId
-        let thread = await Thread.findOne({threadId});
+        // Try to find an existing thread in the database with this threadId and current user.
+        let thread = await Thread.findOne({ threadId, userId: req.user._id });
         // Why let is used here :-
         // const creates a variable binding that cannot be reassigned.But we can still mutate the contents of an object or array, but we cannot point the variable to a new object.
         // let allows reassignment. In this code, we first assign thread to the result of Thread.findOne(...).
@@ -171,18 +171,14 @@ router.post("/chat", async (req, res) => {
         // findOne() gives a document object tied to Mongoose. It’s not a detached copy; it’s connected to the underlying MongoDB record. we can mutate it and call .save() to update the DB.
 
         if(!thread) {
-            // Case 1: No thread found → create a new one
-            // So it means this is some new chat as no previous chat or thread exists for this threadId
-            // create a new thread in DB
             thread = new Thread({
-                threadId,    // unique identifier for this conversation
-                title: message,    // using the first message as the thread title
-                messages: [{role: "user", content: message}]
+                userId: req.user._id,
+                threadId,
+                title: message,
+                messages: [{ role: "user", content: message }],
             });
-        }else{
-            // Case 2: Thread exists → append the new user message 
-            // SO here we are continuing some already existing conversations only.
-            thread.messages.push({role: "user", content: message});
+        } else {
+            thread.messages.push({ role: "user", content: message });
         }
 
         // Call your Groq API helper function to get the assistant’s reply i.e our Groq model reply

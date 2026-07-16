@@ -17,21 +17,34 @@ import { MyContext } from "./MyContext.jsx";
 
 export default function AuthModal() {
     // Here we are using React Context to access the authentication state variables from App.jsx.
-    const { authMode, setAuthMode, showAuthModal, setShowAuthModal, setIsLoggedIn } = useContext(MyContext);
+    const { authMode, setAuthMode, showAuthModal, setShowAuthModal, setIsLoggedIn, setUser } = useContext(MyContext);
 
     // Here this state variable will store the values entered by the user in the form.
     // So this state variable will store object actually
     const [formData, setFormData] = useState({ name: "", email: "", password: "" });
+    const [error, setError] = useState("");
+    const [success, setSuccess] = useState("");
+    const [showPassword, setShowPassword] = useState(false);
 
 
     // Here we will use useEffect to clear the form whenever the modal or dialog closes as it means that user is not login/signing, so we will clear the form
     useEffect(() => {
-        // So if showAuthModal is false, then it means that login/signup modal or dialog is closed, so we will clear the form
+        // When the modal closes, clear the form and any errors.
         if (!showAuthModal) {
             setFormData({ name: "", email: "", password: "" });
+            setError("");
+            setSuccess("");
         }
     }, [showAuthModal]);
 
+    const handleModeChange = (mode) => {
+        if (mode === authMode) return;
+
+        setAuthMode(mode);
+        setFormData({ name: "", email: "", password: "" });
+        setError("");
+        setSuccess("");
+    };
 
     // If the modal or dialog is not open, then do not render anything. so now this component will now show anything if this dialog is not open yet.
     if (!showAuthModal) return null;
@@ -46,15 +59,53 @@ export default function AuthModal() {
 
 
     // This function handles the form submission.
-    const handleSubmit = (event) => {
+    const handleSubmit = async (event) => {
         event.preventDefault();
-        // this will prevent the default behaviour of the form on form submit.
-        // So here we are controlling the internal state of this form during onSubmit
+        setError("");
+        setSuccess("");
 
-        // Here for now, we simply mark the user as logged in and close the modal.
-        // In future, this can be replaced by actual backend login/signup logic.
-        setIsLoggedIn(true);
-        setShowAuthModal(false);
+        const payload = {
+            email: formData.email,
+            password: formData.password,
+        };
+
+        if (authMode === "signup") {
+            payload.name = formData.name;
+        }
+
+        try {
+            const response = await fetch(`http://localhost:8080/api/auth/${authMode}`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                credentials: "include",
+                body: JSON.stringify(payload),
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                console.log("Error response:", data.error);
+                setError(data.error || "Authentication failed. Please try again.");
+                return;
+            }
+
+            if (authMode === "signup") {
+                setAuthMode("signup");
+                setFormData({ name: "", email: "", password: "" });
+                setError("");
+                setSuccess(data.message || "Signup successful.");
+                return;
+            }
+
+            setIsLoggedIn(true);
+            setUser(data.user || null);
+            setShowAuthModal(false);
+        } catch (err) {
+            console.error(err);
+            setError("Network error. Please try again.");
+        }
     };
 
 
@@ -77,7 +128,7 @@ export default function AuthModal() {
                     <button
                         type="button"
                         className={authMode === "login" ? "active" : ""}
-                        onClick={() => setAuthMode("login")}
+                        onClick={() => handleModeChange("login")}
                     >
                         Login
                     </button>
@@ -85,7 +136,7 @@ export default function AuthModal() {
                     <button
                         type="button"
                         className={authMode === "signup" ? "active" : ""}
-                        onClick={() => setAuthMode("signup")}
+                        onClick={() => handleModeChange("signup")}
                     >
                         Sign Up
                     </button>
@@ -116,18 +167,33 @@ export default function AuthModal() {
                         required
                     />
 
-                    <input
-                        type="password"
-                        name="password"
-                        placeholder="Password"
-                        value={formData.password}
-                        onChange={handleChange}
-                        required
-                    />
+                    <div className="passwordField">
+                        <input
+                            type={showPassword ? "text" : "password"}
+                            name="password"
+                            placeholder="Password"
+                            value={formData.password}
+                            onChange={handleChange}
+                            required
+                        />
+                        <button
+                            type="button"
+                            className="passwordToggle"
+                            onClick={() => setShowPassword((s) => !s)}
+                            aria-label={showPassword ? "Hide password" : "Show password"}
+                        >
+                            {showPassword ? "Hide" : "Show"}
+                        </button>
+                    </div>
 
                     <button type="submit" className="authSubmitBtn">
                         {authMode === "login" ? "Login" : "Create Account"}
                     </button>
+
+                    <div className="authFeedback">
+                        {success && <p className="authSuccess">{success}</p>}
+                        {error && <p className="authError">{error}</p>}
+                    </div>
                 </form>
             </div>
         </div>

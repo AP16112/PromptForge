@@ -23,7 +23,7 @@ import { v4 as uuidv4 } from "uuid";
 
 export default function Sidebar() {
     // Here we are using React Context + destructuring to pull out multiple values from your MyContext provider
-    const {allThreads, setAllThreads, currThreadId, setNewChat, setPrompt, setReply, setCurrThreadId, setPrevChats} = useContext(MyContext);
+    const {allThreads, setAllThreads, currThreadId, setNewChat, setPrompt, setReply, setCurrThreadId, setPrevChats, isLoggedIn, setShowAuthModal, setAuthMode} = useContext(MyContext);
     // useContext(MyContext) :- Reads the current value of MyContext.
     // Whatever we passed into <MyContext.Provider value={...}> higher up in your component tree becomes available here.
 
@@ -31,24 +31,27 @@ export default function Sidebar() {
     // Here we will use this fn to all the Threads from the database actually.
     const getAllThreads = async () => {
         try {
-            // Here we are using fetch, but if we want we cal also use axios.
-            const response = await fetch("http://localhost:8080/api/thread");
-            
-            // This will returns a Response object. To read the actual JSON data, we call .json().
-            // This is asynchronous, so we use await again.
+            const response = await fetch("http://localhost:8080/api/thread", {
+                credentials: "include",
+            });
+
+            if (response.status === 401) {
+                setAllThreads([]);
+                setAuthMode("login");
+                setShowAuthModal(true);
+                return;
+            }
+
             const res = await response.json();
-            // It will return the array of thread documents back to us in JSON format
-            
-            // Now we will filter this array of threads to only get threadId and title from each threads here
-            // As to show Thread in sidebar, we need their title as that will became the heading of thread 
-            // And also if we want that when user click on any thread, it will opem all the thread history, we will make use of route which we already created in backend, but for that we need the threadId of that particular thread, so that's why we need threadId here
-            // So from each thread, we will get an object containing only threadId & its title actually
-            // So this filteredData will be an array of objects actually
-            const filteredData = res.map((thread) => ({threadId: thread.threadId, title: thread.title}));
 
+            if (!response.ok) {
+                console.error("Failed to load threads", res);
+                setAllThreads([]);
+                return;
+            }
+
+            const filteredData = res.map((thread) => ({ threadId: thread.threadId, title: thread.title }));
             console.log(filteredData);
-
-            // So now this 'allThreads' state variable will contains this array of filtered objects actually
             setAllThreads(filteredData);
         } catch(err) {
             // If anything goes wrong (network error, invalid API key, bad request),
@@ -63,21 +66,29 @@ export default function Sidebar() {
     // SO whenever we create new thread, then it means that currThreadId state variable get assigned with new uuid, it means that it gets changed, so we will update this allThreads state variables
     // So whenever we refresh the page, or click on new CHat, so new thread gets created, so we will update the Thread history in sidebar using this allThreads state variables by showing all the threads created till now in thread history except this curr newly created thread, as this will be added in thread history only when some new thread gets created or we refresh the page  as then also currThreadId gets changes actuallly
     useEffect(() => {
-        // This function call will fetch or update all threads. It is like as "refreshing" the thread list whenever the current thread ID changes i.e when some new thread created.
+        if (!isLoggedIn) {
+            setAllThreads([]);
+            return;
+        }
+
         getAllThreads();
-    }, [currThreadId])
+    }, [currThreadId, isLoggedIn])
 
 
 
     // Here using this fn, we are actually creating the new chat or new thread here 
     const createNewChat = () => {
-        // Here this newChat state variable stores true if user just created some new chat i.e actually just created new thread, otherwise it will store false, means currently user doesn't created any new chat & it is some older chat or thread actually
-        // But as here we are creating new chat or thread, so we will update it with true now. 
-        setNewChat(true);   
-        setPrompt("");   // as for this new chat, currently prompt will be empty string only as we have just created this now
-        setReply(null);   // as we created this new chat, so for this currently there will be no reply object, we will store null to indicate that we haven't got any reply yet
-        setCurrThreadId(uuidv4());   // as we have just created this new chat or thread, so we need to assign a unique Thread id to this as we know that we only assign this threadId once when we created the new Thread & here we are actually creating new thread only
-        setPrevChats([]);    // here currently we are setting prevChats to be empty array of objects as we have just created this new Thread, so there will be no prev chats exists for this curr thread, so this prevChats array must be empty
+        if (!isLoggedIn) {
+            setAuthMode("login");
+            setShowAuthModal(true);
+            return;
+        }
+
+        setNewChat(true);
+        setPrompt("");
+        setReply(null);
+        setCurrThreadId(uuidv4());
+        setPrevChats([]);
     }
 
 
@@ -93,13 +104,21 @@ export default function Sidebar() {
         try {
             // Here we are using fetch, but if we want we cal also use axios.
             // As here we are not passing any options like method: "GET" or "POST", so it will consider the default method i.e "GET method actually"
-            const response = await fetch(`http://localhost:8080/api/thread/${newThreadId}`);
-            // Here we are fetching all the chats or messages which user created & gets their reply from Groq model, from this current Thread using the route which we created in backend.
-            
-            // This will returns a Response object. To read the actual JSON data, we call .json().
-            // This is asynchronous, so we use await again.
+            const response = await fetch(`http://localhost:8080/api/thread/${newThreadId}`, {
+                credentials: "include",
+            });
+
+            if (response.status === 401) {
+                setAuthMode("login");
+                setShowAuthModal(true);
+                return;
+            }
+
             const res = await response.json();
-            // It will return the array of objects documents back to us in JSON format where each object either represents user message or groq reply
+            if (!response.ok) {
+                console.error("Failed to load thread messages", res);
+                return;
+            }
             
             console.log(res);
 
@@ -129,13 +148,22 @@ export default function Sidebar() {
             // Here we are using fetch, but if we want we cal also use axios.
             // As here if we don't pass any options like method: "GET" or "POST", so it will consider the default method i.e "GET method actually"
             // But for "DELETE" method we need to pass that as object form here 
-            const response = await fetch(`http://localhost:8080/api/thread/${threadId}`, {method: "DELETE"});
-            // It will delete this thread from the database and then return that deleted thread all messages i.e array of message objects actually as response
-            
-            // This will returns a Response object. To read the actual JSON data, we call .json().
-            // This is asynchronous, so we use await again.
+            const response = await fetch(`http://localhost:8080/api/thread/${threadId}`, {
+                method: "DELETE",
+                credentials: "include",
+            });
+
+            if (response.status === 401) {
+                setAuthMode("login");
+                setShowAuthModal(true);
+                return;
+            }
+
             const res = await response.json();
-            // It will return the array of objects documents back to us in JSON format where each object either represents user message or groq reply
+            if (!response.ok) {
+                console.error("Failed to delete thread", res);
+                return;
+            }
             
             console.log(res);
 

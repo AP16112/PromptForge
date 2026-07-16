@@ -61,6 +61,7 @@ function App() {
 
   // Here this state variable will store whether the user is currently logged in or not.
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [user, setUser] = useState(null);
 
   // Here this state variable will store whether the auth modal (i.e login/sigup dialog) is open or closed.
   const [showAuthModal, setShowAuthModal] = useState(false);
@@ -80,6 +81,7 @@ function App() {
     newChat, setNewChat,
     allThreads, setAllThreads,
     isLoggedIn, setIsLoggedIn,
+    user, setUser,
     showAuthModal, setShowAuthModal,
     authMode, setAuthMode
   };

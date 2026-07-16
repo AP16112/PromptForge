@@ -5,6 +5,7 @@ import "./ChatWindow.css";
 
 import Chat from "./Chat.jsx";
 import AuthModal from "./AuthModal.jsx";
+import { v4 as uuidv4 } from "uuid";
 
 // useContext :-
 // A React hook for consuming context values.
@@ -27,7 +28,7 @@ import { RingLoader } from 'react-spinners';
 
 export default function ChatWindow() {
     // Here we are using React Context + destructuring to pull out multiple values from your MyContext provider
-    const {prompt, setPrompt, reply, setReply, currThreadId, setPrevChats, setNewChat, isLoggedIn, setIsLoggedIn, showAuthModal, setShowAuthModal, authMode, setAuthMode} = useContext(MyContext);
+    const {prompt, setPrompt, reply, setReply, currThreadId, setCurrThreadId, setPrevChats, setNewChat, isLoggedIn, setIsLoggedIn, setUser, showAuthModal, setShowAuthModal, authMode, setAuthMode} = useContext(MyContext);
     // useContext(MyContext) :- Reads the current value of MyContext.
     // Whatever we passed into <MyContext.Provider value={...}> higher up in your component tree becomes available here.
 
@@ -51,56 +52,54 @@ export default function ChatWindow() {
     // Here it is an async function because here we will apply the post request to '/chat' route of backend using fetch fn
     // And that will get the response from Groq model which can be time consuming, so that's why we need this to be a async function
     const getReply = async () => {
-        // As as soon as this getReply fn gets called, it means that reponse is been calculated, so we need to show loader in this time
-        // So we will set this loading state variable to true now.
-        setLoading(true);
+        if (!isLoggedIn) {
+            setAuthMode("login");
+            setShowAuthModal(true);
+            return;
+        }
 
-        // As here we are getting the response for some user prompt in this current Thread, it means that we already created this Thread or chat & now it is not new Chat or Thread
+        if (!prompt.trim()) {
+            return;
+        }
+
+        setLoading(true);
         setNewChat(false);
-        // As newChat == true, when we have just created the new chat or Thread, but haven't  send 1st user prompt to get some response yet
-        // But even if we have send 1 user prompt, then it means that we created this Thread or chat, so now it is not remains the new chat now as we have dome some messages in it, so we will make this newChat = false now.
 
         console.log("Current threadId : ", currThreadId);
         console.log("Curr message : ", prompt);
 
-        // Build the options object that will be used to make a request to '/chat' route of backend using fetch fn
         const options = {
-            method: "POST",    // HTTP method is POST because we are sending data to the API.
+            method: "POST",
             headers: {
-                "Content-Type": "application/json",    // Tells the API we are sending JSON data.
+                "Content-Type": "application/json",
             },
-
-            // The body is the actual payload we send to the API.
-            // It must be converted to a JSON string using JSON.stringify().
+            credentials: "include",
             body: JSON.stringify({
                 message: prompt,
-                threadId: currThreadId
-            })
+                threadId: currThreadId,
+            }),
         };
-        // SO this options will became the blueprint for the HTTP request on the client i.e in backend.
 
         try {
-            // Send a POST request to the '/chat' route of backend.
-            // 'options' contains the headers (API key, content type) and body (model + messages).
-            // Here we are using fetch, but if we want we cal also use axios.
             const response = await fetch("http://localhost:8080/api/chat", options);
-            
-            // This will returns a Response object. To read the actual JSON data, we call .json().
-            // This is asynchronous, so we use await again.
+            if (response.status === 401) {
+                setAuthMode("login");
+                setShowAuthModal(true);
+                return;
+            }
+
             const res = await response.json();
-            // Here it will return the object in which 'reply' key contains the actuall reply message as its value
-          
-            console.log(res);
+            if (!response.ok) {
+                console.error(res);
+                return;
+            }
 
             setReply(res.reply);
-        } catch(err) {
-            // If anything goes wrong (network error, invalid API key, bad request),
-            // the error is caught here. We log it so you can debug.
+        } catch (err) {
             console.log(err);
+        } finally {
+            setLoading(false);
         }
-
-        // So as soon as we gets the response, we will set this loading state variable to false now.
-        setLoading(false);
     }
 
 
@@ -175,10 +174,53 @@ export default function ChatWindow() {
     }
 
     // Here this fn will log out the user and close the profile dropdown.
-    const handleLogout = () => {
+    const handleLogout = async () => {
+        try {
+            await fetch("http://localhost:8080/api/auth/logout", {
+                method: "POST",
+                credentials: "include",
+            });
+        } catch (error) {
+            console.error("Logout failed", error);
+        }
+
         setIsLoggedIn(false);    // as user is logout, so we will set isLoggedIn to false now.
+        setUser(null);
+        setNewChat(true);
+        setPrompt("");
+        setReply(null);
+        setPrevChats([]);
+        setCurrThreadId(uuidv4());  // Generate a fresh UUID for the new thread on logout
         setIsOpen(false);
     }
+
+
+
+    useEffect(() => {
+        const checkAuthStatus = async () => {
+            try {
+                const response = await fetch("http://localhost:8080/api/auth/status", {
+                    credentials: "include",
+                });
+
+                const data = await response.json();
+
+                if (data.authenticated) {
+                    setIsLoggedIn(true);
+                    setUser(data.user || null);
+                } else {
+                    setIsLoggedIn(false);
+                    setUser(null);
+                }
+            } catch (error) {
+                console.error("Failed to verify auth status", error);
+                setIsLoggedIn(false);
+                setUser(null);
+            }
+        };
+
+        checkAuthStatus();
+    }, [setIsLoggedIn, setUser]);
 
     
 
@@ -187,7 +229,7 @@ export default function ChatWindow() {
             <div className="navbar">
                 <span><img src="promptforge-logo.png"  alt="PromptForge"></img></span>
 
-                <div className="userIconDiv"  onClick={handleProfileClick}>
+                <div className={`userIconDiv ${isOpen ? 'active' : ''}`} onClick={handleProfileClick}>
                     <span className="userIcon"><i className="fa-solid fa-user"></i></span>
                 </div>
             </div>
@@ -235,11 +277,12 @@ export default function ChatWindow() {
                         placeholder="Ask anything"  
                         value={prompt}     // The value of the input is controlled by the React state variable 'prompt'. This makes it a "controlled component" (React manages the value).
                         onChange={(event) => setPrompt(event.target.value)}     // Event handler: runs whenever the user types in the input. 'event.target.value' is the new text the user entered. 'setPrompt' updates the state with that new value.
-                        onKeyDown={(event) => event.key === 'Enter' ? getReply() : ''}
-                        // onKeyDown → A React event handler that fires whenever a key is pressed down while the input is focused
-                        // event.key → A property that tells you which key was pressed (e.g., "Enter", "a", "Backspace").
-                        // SO here If the key pressed is "Enter": Call the function getReply() (likely your async function that fetches a reply).
-                        // Otherwise: '' it means that Do nothing ('' is just a placeholder here).
+                        onKeyDown={(event) => {
+                            if (event.key === 'Enter') {
+                                event.preventDefault();
+                                getReply();
+                            }
+                        }}
                     ></input>
                     {/* So we will get the output either when we click on this button having id="submit" or when we simply click enter while inside this input element area */}
                 
