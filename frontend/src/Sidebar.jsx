@@ -196,7 +196,7 @@ export default function Sidebar() {
         <section className="sidebar">
             {/* PromptForge logo */}
             <div className="promptforge-logo">
-                <a href="#"><img src="src/assets/promptforge.png"  alt="promptforge logo"  className="logo"></img></a>
+                <a href="#"><img src="./src/assets/promptforge.png"  alt="promptforge logo"  className="logo"></img></a>
             </div>
 
             {/* New chat button */}
