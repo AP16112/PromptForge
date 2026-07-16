@@ -1,7 +1,7 @@
 // This will be our main backend file for this project.
 
 //-------------------------------------------------------------------------------------
-// Project :- PromptForge
+// Project :- PromptForge - "Smart answers, forged from every prompt"
 
 // A full-stack MERN AI chat application that leverages OpenAI APIs to transform user prompts into intelligent, personalized, and context-aware responses.
 //-------------------------------------------------------------------------------------
