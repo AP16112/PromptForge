@@ -81,7 +81,7 @@ export default function ChatWindow() {
         };
 
         try {
-            const response = await fetch("http://localhost:8080/api/chat", options);
+            const response = await fetch("https://promptforge-backend-kjii.onrender.com/api/chat", options);
             if (response.status === 401) {
                 setAuthMode("login");
                 setShowAuthModal(true);
@@ -176,7 +176,7 @@ export default function ChatWindow() {
     // Here this fn will log out the user and close the profile dropdown.
     const handleLogout = async () => {
         try {
-            await fetch("http://localhost:8080/api/auth/logout", {
+            await fetch("https://promptforge-backend-kjii.onrender.com/api/auth/logout", {
                 method: "POST",
                 credentials: "include",
             });
@@ -199,7 +199,7 @@ export default function ChatWindow() {
     useEffect(() => {
         const checkAuthStatus = async () => {
             try {
-                const response = await fetch("http://localhost:8080/api/auth/status", {
+                const response = await fetch("https://promptforge-backend-kjii.onrender.com/api/auth/status", {
                     credentials: "include",
                 });
 

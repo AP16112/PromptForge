@@ -31,7 +31,7 @@ export default function Sidebar() {
     // Here we will use this fn to all the Threads from the database actually.
     const getAllThreads = async () => {
         try {
-            const response = await fetch("http://localhost:8080/api/thread", {
+            const response = await fetch("https://promptforge-backend-kjii.onrender.com/api/thread", {
                 credentials: "include",
             });
 
@@ -104,7 +104,7 @@ export default function Sidebar() {
         try {
             // Here we are using fetch, but if we want we cal also use axios.
             // As here we are not passing any options like method: "GET" or "POST", so it will consider the default method i.e "GET method actually"
-            const response = await fetch(`http://localhost:8080/api/thread/${newThreadId}`, {
+            const response = await fetch(`https://promptforge-backend-kjii.onrender.com/api/thread/${newThreadId}`, {
                 credentials: "include",
             });
 
@@ -148,7 +148,7 @@ export default function Sidebar() {
             // Here we are using fetch, but if we want we cal also use axios.
             // As here if we don't pass any options like method: "GET" or "POST", so it will consider the default method i.e "GET method actually"
             // But for "DELETE" method we need to pass that as object form here 
-            const response = await fetch(`http://localhost:8080/api/thread/${threadId}`, {
+            const response = await fetch(`https://promptforge-backend-kjii.onrender.com/api/thread/${threadId}`, {
                 method: "DELETE",
                 credentials: "include",
             });

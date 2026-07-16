@@ -74,7 +74,7 @@ export default function AuthModal() {
         }
 
         try {
-            const response = await fetch(`http://localhost:8080/api/auth/${authMode}`, {
+            const response = await fetch(`https://promptforge-backend-kjii.onrender.com/api/auth/${authMode}`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
