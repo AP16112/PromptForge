@@ -67,10 +67,23 @@ const mongoose = require("mongoose");
 
 const User = require("./models/user.js");
 
+const allowedOrigins = [
+    process.env.FRONTEND_URL,
+    "https://promptforge-smart-ai-assistant.vercel.app",
+    "http://localhost:5173",
+    "http://127.0.0.1:5173"
+].filter(Boolean);
 
 // SO now we will use the app.use() method to add middleware to our Express application. Middleware functions are functions that have access to the request object (req), the response object (res), and the next middleware function in the application’s request-response cycle. They can execute any code, make changes to the request and response objects, end the request-response cycle, and call the next middleware function in the stack. In this case, we are using two middleware functions: cors() and bodyParser.json(). The cors() middleware enables Cross-Origin Resource Sharing (CORS) for all routes, allowing our frontend application to make requests to our backend server from a different domain or port. The bodyParser.json() middleware parses incoming request bodies in JSON format and makes them available under the req.body property, allowing us to easily access and process data sent from the client side.
 app.use(cors({
-    origin: process.env.FRONTEND_URL || "https://promptforge-smart-ai-assistant.vercel.app",
+    origin: (origin, callback) => {
+        if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true);
+            return;
+        }
+
+        callback(new Error("Not allowed by CORS"));
+    },
     credentials: true   // For cookie/session auth, this must allow credentials
 }));// Enable CORS for all routes
 // CORS (Cross-Origin Resource Sharing) is a security feature built into browsers. By default, browsers block requests from one origin (say, http://localhost:3000) to another (http://localhost:8080).
@@ -103,6 +116,8 @@ const store = MongoStore.create({
 // So here we are creating a new MongoDB store for our sessions using connect-mongo. This will allow us to store session data in our MongoDB database instead of in memory, which is more scalable and suitable for production environments. We pass the mongoUrl option with our database URL to connect to the correct MongoDB instance.
 
 
+
+app.set("trust proxy", 1);
 
 const sessionOptions = {
     // store: store,   // here we are passing the store that we created above to store our session data in the database, so that it will be more secure and scalable than storing the session data in memory.
