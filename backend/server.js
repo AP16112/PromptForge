@@ -70,7 +70,7 @@ const User = require("./models/user.js");
 
 // SO now we will use the app.use() method to add middleware to our Express application. Middleware functions are functions that have access to the request object (req), the response object (res), and the next middleware function in the application’s request-response cycle. They can execute any code, make changes to the request and response objects, end the request-response cycle, and call the next middleware function in the stack. In this case, we are using two middleware functions: cors() and bodyParser.json(). The cors() middleware enables Cross-Origin Resource Sharing (CORS) for all routes, allowing our frontend application to make requests to our backend server from a different domain or port. The bodyParser.json() middleware parses incoming request bodies in JSON format and makes them available under the req.body property, allowing us to easily access and process data sent from the client side.
 app.use(cors({
-    origin: process.env.FRONTEND_URL || "http://localhost:5173",
+    origin: process.env.FRONTEND_URL || "https://promptforge-smart-ai-assistant.vercel.app",
     credentials: true   // For cookie/session auth, this must allow credentials
 }));// Enable CORS for all routes
 // CORS (Cross-Origin Resource Sharing) is a security feature built into browsers. By default, browsers block requests from one origin (say, http://localhost:3000) to another (http://localhost:8080).
