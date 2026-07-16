@@ -67,21 +67,42 @@ const mongoose = require("mongoose");
 
 const User = require("./models/user.js");
 
+// Define an array of allowed origins for CORS (Cross-Origin Resource Sharing)
 const allowedOrigins = [
+    // Use the frontend URL from environment variables (e.g., production frontend domain)
     process.env.FRONTEND_URL,
     "https://promptforge-smart-ai-assistant.vercel.app",
     "http://localhost:5173",
     "http://127.0.0.1:5173"
 ].filter(Boolean);
+// Here this .filter(Boolean) :-
+// Filter out any falsy values (like undefined or empty strings)
+// This ensures only valid URLs remain in the final array
+
+// How .filter(Boolean) works :-
+// .filter() is a JavaScript array method that creates a new array containing only the elements that pass a given test.
+// Normally, you pass a function like filter(x => x > 10). Here, instead of writing a custom function, we’re passing Boolean directly.
+// Boolean is a built-in function that converts a value into either true or false.
+// So .filter(Boolean) keeps only the truthy values and removes all falsy ones.
+// e.g   const arr = [0, 1, "", "hello", null, undefined, "world", false];
+// // Filter out falsy values
+// const filtered = arr.filter(Boolean);
+// console.log(filtered);
+// Output: [1, "hello", "world"]
+
+
+
 
 // SO now we will use the app.use() method to add middleware to our Express application. Middleware functions are functions that have access to the request object (req), the response object (res), and the next middleware function in the application’s request-response cycle. They can execute any code, make changes to the request and response objects, end the request-response cycle, and call the next middleware function in the stack. In this case, we are using two middleware functions: cors() and bodyParser.json(). The cors() middleware enables Cross-Origin Resource Sharing (CORS) for all routes, allowing our frontend application to make requests to our backend server from a different domain or port. The bodyParser.json() middleware parses incoming request bodies in JSON format and makes them available under the req.body property, allowing us to easily access and process data sent from the client side.
 app.use(cors({
     origin: (origin, callback) => {
-        if (!origin || allowedOrigins.includes(origin)) {
+        if(!origin || allowedOrigins.includes(origin)) {
+            // ...then allow the request by calling the callback with "null" (no error) and "true" (allowed)
             callback(null, true);
             return;
         }
 
+        // Otherwise, reject the request by passing an error to the callback
         callback(new Error("Not allowed by CORS"));
     },
     credentials: true   // For cookie/session auth, this must allow credentials
